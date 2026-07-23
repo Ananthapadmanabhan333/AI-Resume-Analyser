@@ -37,4 +37,4 @@ RUN mkdir -p /app/models /app/data/raw /app/data/processed
 EXPOSE 8000
 
 # Set default entrypoint command to run API serving
-CMD ["uvicorn", "src.parser.schema_verifier:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "src.app:app", "--host", "0.0.0.0", "--port", "8000"]

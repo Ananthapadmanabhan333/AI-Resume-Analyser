@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Intelligence Foundation Model (RIFM) Dashboard</title>
+    <!-- Google Fonts Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-box">
+                <div class="logo-pulse"></div>
+                <h1>RIFM <span>v1.0.0</span></h1>
+            </div>
+            <p>Production-Grade Resume Intelligence Foundation Model Console</p>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="main-container">
+            
+            <!-- Left panel: Inputs -->
+            <section class="panel input-panel">
+                <h2 class="panel-title">Ingestion & Parameters</h2>
+                
+                <form id="analysis-form">
+                    <div class="form-group">
+                        <label for="resume-file">Resume Upload (PDF / TXT / Markdown)</label>
+                        <div class="upload-dropzone" id="dropzone">
+                            <input type="file" id="resume-file" accept=".pdf,.txt,.md,.markdown" style="display: none;">
+                            <div class="dropzone-prompt">
+                                <svg class="upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <p class="primary-text">Drag and drop file here, or <span>browse</span></p>
+                                <p class="secondary-text">PDF, Text, or Markdown formats up to 10MB</p>
+                            </div>
+                            <div class="file-info-badge" id="file-info" style="display: none;">
+                                <span class="file-name" id="file-name-text">filename.pdf</span>
+                                <button type="button" class="remove-file-btn" id="remove-file-btn">&times;</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jd-title">Job Title</label>
+                        <input type="text" id="jd-title" placeholder="e.g. Senior Machine Learning Engineer" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="jd-requirements">Job Requirements / Core Skills (Comma-separated)</label>
+                        <input type="text" id="jd-requirements" placeholder="e.g. PyTorch, Python, Kubernetes, vLLM, CUDA" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="resume-raw-text">Raw Resume Text (Optional fallback if not uploading PDF)</label>
+                        <textarea id="resume-raw-text" placeholder="Paste raw resume text here if file upload is not preferred..."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        <span>Execute Intelligence Analysis</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right panel: Results Dashboard -->
+            <section class="panel results-panel" id="results-panel">
+                
+                <!-- Initial Empty State -->
+                <div class="empty-state" id="empty-state">
+                    <svg class="empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <h3>No Analysis Report Loaded</h3>
+                    <p>Provide a candidate resume and job parameters on the left to trigger the model's structured reasoning evaluation pipeline.</p>
+                </div>
+
+                <!-- Loading State -->
+                <div class="loader-overlay" id="loader-overlay" style="display: none;">
+                    <div class="spinner-box">
+                        <div class="spinner"></div>
+                        <p class="loader-text">Executing Qwen3-8B Reasoning Chain...</p>
+                        <p class="loader-subtext">Evaluating skill gaps and parsing metadata</p>
+                    </div>
+                </div>
+
+                <!-- Active Report Content -->
+                <div class="report-content" id="report-content" style="display: none;">
+                    
+                    <!-- Metrics Row -->
+                    <div class="metrics-row">
+                        <div class="radial-gauge-container">
+                            <div class="radial-gauge">
+                                <svg class="radial-svg" viewBox="0 0 100 100">
+                                    <circle class="gauge-bg" cx="50" cy="50" r="42"></circle>
+                                    <circle class="gauge-fill" id="ats-gauge-fill" cx="50" cy="50" r="42" stroke-dasharray="263.8" stroke-dashoffset="263.8"></circle>
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="gauge-num" id="ats-score-text">0</span>
+                                    <span class="gauge-label">ATS Score</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bar-metrics-container">
+                            <div class="bar-metric">
+                                <div class="bar-header">
+                                    <span>Semantic Job Match</span>
+                                    <span id="match-percent-text">0%</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" id="match-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="bar-metric">
+                                <div class="bar-header">
+                                    <span>Skill Coverage</span>
+                                    <span id="skills-coverage-text">0%</span>
+                                </div>
+                                <div class="bar-track">
+                                    <div class="bar-fill" id="skills-fill" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Tabs -->
+                    <div class="tabs-nav">
+                        <button type="button" class="tab-btn active" data-tab="tab-overview">Overview</button>
+                        <button type="button" class="tab-btn" data-tab="tab-skills">Skill Gaps</button>
+                        <button type="button" class="tab-btn" data-tab="tab-feedback">Recruiter Feedback</button>
+                    </div>
+
+                    <!-- Tab Contents -->
+                    <div class="tabs-content">
+                        
+                        <!-- Tab 1: Overview -->
+                        <div class="tab-pane active" id="tab-overview">
+                            <div class="overview-section">
+                                <h3>Executive Summary</h3>
+                                <p id="reasoning-summary-text" class="summary-paragraph">Summary loading...</p>
+                            </div>
+                            
+                            <div class="cards-grid">
+                                <div class="status-card positive">
+                                    <h4>Identified Strengths</h4>
+                                    <ul id="strengths-list">
+                                        <!-- Strengths go here -->
+                                    </ul>
+                                </div>
+                                <div class="status-card negative">
+                                    <h4>Identified Gaps</h4>
+                                    <ul id="weaknesses-list">
+                                        <!-- Weaknesses go here -->
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="confidence-badge">
+                                <span>Model Confidence Score:</span>
+                                <strong id="confidence-value-text">0.00</strong>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Skills -->
+                        <div class="tab-pane" id="tab-skills">
+                            <h3>Missing Skill Gaps</h3>
+                            <p class="section-description">The following skills were explicitly requested in the Job Description but were not resolved from the candidate's resume timeline:</p>
+                            <div class="skills-badge-container" id="missing-skills-container">
+                                <!-- Badges go here -->
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Feedback -->
+                        <div class="tab-pane" id="tab-feedback">
+                            <h3>Recruiter Evaluation Notes</h3>
+                            <div class="feedback-card">
+                                <p id="recruiter-notes-text">Model feedback evaluation metrics loading...</p>
+                            </div>
+                            <div class="alert-box note">
+                                <strong>System Note:</strong> The evaluation scores are generated using cross-attention comparisons matched against historical recruiter decisions.
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 Resume Intelligence Foundation Model. Serviced locally in production-grade quantized configuration.</p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
