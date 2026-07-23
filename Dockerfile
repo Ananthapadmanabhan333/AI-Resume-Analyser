@@ -19,11 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy requirement constraints first for caching
-COPY requirements.txt .
+COPY requirements.txt requirements-ml.txt ./
 
 # Install python requirements
 RUN pip3 install --no-cache-dir --upgrade pip && \
-    pip3 install --no-cache-dir -r requirements.txt
+    pip3 install --no-cache-dir -r requirements.txt -r requirements-ml.txt
 
 # Copy source tree and configuration folders
 COPY src/ ./src/
