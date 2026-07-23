@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant-vector-db
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+      - "6000:6000"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+    networks:
+      - rifm-network
+
+  rifm-inference-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rifm-api-service
+    ports:
+      - "8000:8000"
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    depends_on:
+      - qdrant
+    restart: unless-stopped
+    networks:
+      - rifm-network
+
+volumes:
+  qdrant_data:
+
+networks:
+  rifm-network:
+    driver: bridge

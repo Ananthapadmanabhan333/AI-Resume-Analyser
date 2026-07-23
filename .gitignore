@@ -1,0 +1,20 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Local model weights and configs
+models/*
+!models/rifm-qwen3-8b-adapter/.keep
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# OS specific files
+.DS_Store
+Thumbs.db
